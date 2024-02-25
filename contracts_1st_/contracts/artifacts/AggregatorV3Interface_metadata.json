@@ -1,0 +1,213 @@
+{
+	"compiler": {
+		"version": "0.8.24+commit.e11b9ed9"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"name": "decimals",
+				"outputs": [
+					{
+						"internalType": "uint8",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "description",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint80",
+						"name": "_roundId",
+						"type": "uint80"
+					}
+				],
+				"name": "getRoundData",
+				"outputs": [
+					{
+						"internalType": "uint80",
+						"name": "roundId",
+						"type": "uint80"
+					},
+					{
+						"internalType": "int256",
+						"name": "answer",
+						"type": "int256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "startedAt",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "updatedAt",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint80",
+						"name": "answeredInRound",
+						"type": "uint80"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "latestRoundData",
+				"outputs": [
+					{
+						"internalType": "uint80",
+						"name": "roundId",
+						"type": "uint80"
+					},
+					{
+						"internalType": "int256",
+						"name": "answer",
+						"type": "int256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "startedAt",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "updatedAt",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint80",
+						"name": "answeredInRound",
+						"type": "uint80"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "version",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/Arbbot.sol": "AggregatorV3Interface"
+		},
+		"evmVersion": "shanghai",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@openzeppelin/contracts/security/ReentrancyGuard.sol": {
+			"keccak256": "0x75ce7378bac154de579ee97d40c35f35ca584629a8e3bca3083cac2967c11c12",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://e476de47d2ec2948ad05445a7871d7e1721cc870ea646813d70f642085162410",
+				"dweb:/ipfs/QmQmhFW5qnXjGAv4oi8Ng3n2zUTC2UBrA1jidi9FAFFKvu"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+			"keccak256": "0x32fc81940e398095a082754088b43bcd70dda770a819586abc34fe8b387a42b4",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://59e2c83e48dbd6c4576400811d11eccbbe8dd44d652fdbaabab22b6fa1188bba",
+				"dweb:/ipfs/QmZkWkDCQGwJH44EN61jov9MY34qg15WYtAvJYvkSJusx4"
+			]
+		},
+		"@openzeppelin/contracts/utils/math/SafeMath.sol": {
+			"keccak256": "0x58b21219689909c4f8339af00813760337f7e2e7f169a97fe49e2896dcfb3b9a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://ef8e012e946dec20e59f2d4446f4b44bb098f3fa8bac103b1b5112fff777447b",
+				"dweb:/ipfs/QmVTooKWcLkJ9W68yNX4MgdrbAKiAXwuRN9A7f4NkdcdtQ"
+			]
+		},
+		"@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router01.sol": {
+			"keccak256": "0xcd3244591373294968423a9a57fde0a93a154b4a7693056d086871cd73e906b2",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://a6fad0779950cb2e5390a58f75dfb1a8e2ce37a42e8b71ca50b1ab5f629cd721",
+				"dweb:/ipfs/QmYuFdZdUUDdPyEEqc321XLmioKGHNHAzAKcCmQtVHBDkv"
+			]
+		},
+		"@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol": {
+			"keccak256": "0x3442102b63df39b36ee8b78993566ff3a09b3f88e1a7d9d38fb982bdeacbb979",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://805c0287954070bc3a2dad2912db29c9c29a8b46a50d615061927d592bf90ed8",
+				"dweb:/ipfs/QmXA1nrptnUARHQMqzUKEJDKaCKJisSepSABY55aaf7hxt"
+			]
+		},
+		"contracts/Arbbot.sol": {
+			"keccak256": "0x33ed1053640df51fba5a19f9df800e2719b5dd17bec17ee60309c7e8a4ed713a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://8ece9de298e86fcf9d2ba7478e56f421e37cd2b6e90cd4394e65a914f020579a",
+				"dweb:/ipfs/QmP1YAsqgFSKTgtqbAxcs9taUd6GJXAJa2y6SR6y5qAH4Y"
+			]
+		},
+		"contracts/ArbbotProxy.sol": {
+			"keccak256": "0x89e2c3f954c5aa957abdc59c25770592f01426824071b696c31cd3dea3daef35",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://396508ea60afe1e66621ec503b1ed921e916d97e0878d90b11610dd79f06b354",
+				"dweb:/ipfs/QmWC1ydDRRnGxxGNUhpxSjdzXzgToVwhdP7ZKDn4g18HbX"
+			]
+		},
+		"contracts/GasEstimator.sol": {
+			"keccak256": "0x732a4db13afe945c3c7927f0de9db3569dd85d3c45d7bf47e3ff073df5e278e7",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://28825fdf29790714ad27037a8b993193b85814a71d07065b8d61a10883dc9ca9",
+				"dweb:/ipfs/QmdHPBSs5W5oidbBDgv7PeFmC8GcjGH2Hxu43JD3bZf71M"
+			]
+		}
+	},
+	"version": 1
+}
