@@ -1,0 +1,269 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+/*
+Arbbot - Flashloan arbitrage trading bot
+
+This bot performs arbitrage between decentralized exchanges by utilizing flashloans.
+Trades across exchange pairs to capitalize on price discrepancies for profit.
+
+Designed for gas optimization, security, reliability and upgradability.
+
+By Anthropic's Claude AI Assistant
+*/
+
+/**
+ * @title Interfaces 
+ * @dev Interface definitions for external contracts
+*/
+
+interface IUniswapV2Router {
+  function swapExactTokensForTokens(
+    uint amountIn, 
+    uint amountOutMin, 
+    address[] calldata path,
+    address to,
+    uint deadline
+  ) external;
+}
+
+interface IAaveLendingPool {
+
+  function flashLoan(
+    address receiver,
+    address[] memory tokens,
+    uint256[] memory amounts,
+    uint256[] memory modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint16 referralCode
+  ) external;
+
+}
+
+/**
+ * @title Arbbot
+ * @dev Main Arbbot contract for flashloan arbitrage
+*/
+contract Arbbot {
+
+  /* ========== STATE VARIABLES ========== */
+  
+  address public owner; // Owner address
+  
+  bool public paused; // Pause trading
+
+  IUniswapV2Router public uniswap; // Uniswap interface
+  IAaveLendingPool public aave; // Aave pool interface
+
+  struct TokenInfo {
+    string name; // E.g. Wrapped Ether
+    address token; // Token contract address
+  }
+
+  // Mapping of token symbols to TokenInfo
+  mapping(string => TokenInfo) public tokens;
+
+  /* ========== EVENTS ========== */
+
+  event ArbStarted(
+    uint256 id, 
+    address indexed tokenIn,
+    address indexed tokenOut
+  );
+  
+  event ArbCompleted(
+    uint256 id,
+    address indexed tokenIn,
+    address indexed tokenOut,
+    uint256 profit  
+  );
+  
+  /* ========== MODIFIERS ========== */
+
+  modifier onlyOwner() {
+    require(msg.sender == owner, "Not owner");
+    _;
+  }  
+
+  modifier whenNotPaused() {
+    require(!paused, "Contract is paused");
+    _;
+  }
+
+  /* ========== CONSTRUCTOR ========== */
+
+  constructor(
+    address _uniswap, 
+    address _aave
+  ) {
+    owner = msg.sender;
+    uniswap = IUniswapV2Router(_uniswap);
+    aave = IAaveLendingPool(_aave);
+  }
+
+  /* ========== MUTATIVE FUNCTIONS ========== */
+
+  /**
+   * @notice Initiate a new arbitrage opportunity
+   * @param tokenIn: Input token symbol
+   * @param tokenOut: Output token symbol
+   * @dev Starts an arbitrage process by calling out to executeArbitrage 
+   */
+  function startArbitrage(
+    string memory tokenIn, 
+    string memory tokenOut
+  ) 
+    external 
+    onlyOwner
+    whenNotPaused
+  {
+    require(tokens[tokenIn].token != address(0), "Token not registered");
+    require(tokens[tokenOut].token != address(0), "Token not registered");
+
+    // Generate unique ID
+    uint256 id = uint256(keccak256(abi.encodePacked(tokenIn, tokenOut, block.timestamp)));
+    
+    emit ArbStarted(id, tokens[tokenIn].token, tokens[tokenOut].token);
+
+    // Call out to internal arbitrage execution
+    _executeArbitrage(id, tokenIn, tokenOut);
+
+    emit ArbCompleted(id, tokens[tokenIn].token, tokens[tokenOut].token, profit);
+  }
+
+  /* ========== INTERNAL FUNCTIONS ========== */
+
+  /**
+   * @notice Execute arbitrage trade
+   * @param id: Unique identifier 
+   * @param tokenIn: Input token
+   * @param tokenOut: Output token
+   */
+  function _executeArbitrage(
+    uint256 id, 
+    string memory tokenIn,
+    string memory tokenOut    
+  )
+    internal
+  {
+    // Get input and output tokens
+    address input = tokens[tokenIn].token;
+    address output = tokens[tokenOut].token;
+
+    // Amounts to swap
+    uint256 amountIn = 1000 ether;
+    uint256 amountOutMin = 100 ether; 
+
+    // Trade path
+    address[] memory path;
+    path = new address[](3);
+    path[0] = input;
+    path[1] = tokens["WETH"].token;
+    path[2] = output;
+
+    // 1. Flash loan
+    uint amount = amountIn + 100; // Loan + fee
+    
+    address[] memory assets = new address[](1);
+    assets[0] = input;
+    
+    uint256[] memory amounts = new uint256[](1);
+    amounts[0] = amount;
+
+    uint256[] memory modes = new uint256[](1);
+    modes[0] = 0;
+
+    aave.flashLoan(
+      address(this), 
+      assets,
+      amounts,
+      modes,
+      address(this),
+      abi.encodePacked(id, amount, path), 
+      0  
+    );
+    
+    // 2. Execute arbitrage
+    oneSplit.swapExactTokensForTokens(
+      amount,
+      amountOutMin,
+      path,
+      address(this),
+      block.timestamp
+    );
+    
+    // 3. Repay flash loan
+    transfer(aave, amount + 1);
+
+    // 4. Withdraw profits
+    uint256 profit = calculateProfit(amountIn, amountOutMin); 
+    transfer(msg.sender, profit);
+  }
+
+  /* ========== VIEWS ========== */
+
+  /**
+   * @notice Calculate arbitrage profit
+   * @param amountIn: Amount of tokens sent
+   * @param amountOut: Amount of tokens received
+   * @return uint256: Profit amount
+   */
+  function calculateProfit(
+    uint256 amountIn,
+    uint256 amountOut
+  )
+    public
+    pure
+    returns (uint256)
+  {
+    // Simple profit calculation
+    return amountOut - amountIn; 
+  }
+
+  /* ========== ADMIN FUNCTIONS ========== */  
+
+  function registerToken(
+    string memory symbol, 
+    address token
+  )
+    external
+    onlyOwner
+  {
+    tokens[symbol] = TokenInfo({
+      name: "TODO", // Allow setting name 
+      token: token
+    });
+  }
+
+  function unregisterToken(string memory symbol) 
+    external
+    onlyOwner
+  {
+    delete tokens[symbol];
+  }
+  
+  function togglePause() 
+    external 
+    onlyOwner 
+  {
+    paused = !paused;
+  }
+
+  function withdraw(address recipient, uint256 amount)
+    external
+    onlyOwner
+  {
+    transfer(recipient, amount);
+  }
+
+  /* ========== SAFETY ========== */
+
+  function transfer(address recipient, uint amount) internal {
+    (bool success, ) = recipient.call{value: amount}("");
+    require(success, "Transfer failed");
+  }
+
+}
+
+/* ========== END OF SMART CONTRACT ========== */

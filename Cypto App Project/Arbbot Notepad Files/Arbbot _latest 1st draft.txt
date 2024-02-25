@@ -1,0 +1,95 @@
+// Internal methods
+
+  function _executeArbitrage(bytes32 id) 
+    internal
+  {
+    ArbInfo memory info = arbOpportunities[id];
+   
+    // 1. Check price discrepancy
+    if (!_checkProfitability(info)) {
+      emit ArbFailed(id, info.tokenIn, info.tokenOut, "Not profitable"); 
+      return;
+    }
+
+    // 2. Take flash loan
+    _takeFlashLoan(info);
+    
+    // 3. Execute trade
+    _makeTrade(info); 
+
+    // 4. Repay loan
+    _repayLoan(info);
+
+    // 5. Withdraw profit
+    uint profit = _realizeProfit(info);
+
+    emit ArbExecuted(id, info.tokenIn, info.tokenOut, profit);
+
+    // 6. Delete opportunity
+    delete arbOpportunities[id];
+  }
+
+  function _takeFlashLoan(ArbInfo memory info) internal {
+    // Calculate required loan amount
+    uint amount = _getLoanAmount(info);
+
+    address[] memory assets = new address[](1);
+    assets[0] = info.tokenIn;
+
+    uint256[] memory amounts = new uint256[](1);
+    amounts[0] = amount;
+
+    uint256[] memory modes = new uint256[](1);
+    modes[0] = 0;
+
+    lendingPool.flashLoan(
+      address(this),
+      assets,
+      amounts,
+      modes,
+      address(this),
+      abi.encodePacked(info),
+      0
+    );
+	// confirm the Flashloan is successful
+  }
+
+  function _makeTrade(ArbInfo memory info) internal {
+    // Define input amount
+    uint amountIn = 1000 ether;
+
+    // Call 1inch to get output amount for trade
+    uint amountOut = _get1inchOutput(amountIn, info);
+
+    // Deadline and min output
+    uint deadline = block.timestamp + 15 minutes; 
+    uint amountOutMin = amountOut - (amountOut * slippage / 100);
+
+    // Swap tokens
+    uniswap.swapExactTokensForTokens(
+      amountIn, 
+      amountOutMin,
+      getTradePath(info),
+      address(this),
+      deadline
+    );
+  }  
+
+  function _repayLoan(ArbInfo memory info) internal {
+    // Repay flash loan 
+    uint amountOwed = _getLoanAmount(info) + 1;
+
+    transferToken(info.tokenIn, lendingPool, amountOwed);
+  }
+
+  function _realizeProfit(ArbInfo memory info) internal returns (uint) {
+    // Get input and output amounts
+    uint amountIn = _getTradeInputAmount(info);
+    uint amountOut = _getTradeOutputAmount(info); 
+    
+    // Send profit to owner
+    uint profit = amountOut - amountIn;
+    transferToken(info.tokenOut, owner, profit);
+
+    return profit;
+  }

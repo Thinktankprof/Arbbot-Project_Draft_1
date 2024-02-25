@@ -1,0 +1,26 @@
+Daily acummulated profit for a user = sum of all the profits of all the trades of all the traded pairs within 24hours time stamp.
+
+function to check for week or month cummulated profitfor a user = sum of all daily acummulative profits for the duraton specified.
+
+function to configure user details = 
+1.Subscription Duration type for the user
+
+Payout profit calculation and payment... 
+2.Fixed amount profit percentage calculation method or Calculate daily profit percentage method.
+2. Payment intervals = time 
+3. Payment expiry date = date
+4. Payment distribution = check user payment expiry date if valid, check user  profit payout percentage, send user profit percent share to user payout wallet, the rest percent send to App owner wallet.
+5. Subscription renewal =  Renew subscription, reset user payment expiry date to new initial expiry duration.
+6. Upgrade subscription category = set user subscription to other or new specified subscription category.
+7. Condition after Subscription Duration Expiry if not renewed= Check if renewed, else stop user payout profit distribution, send all profits to App owner.
+
+Subscription categories:
+
+1. Silver category = Subscription amount,Fixed amount profit percentage calculation method, Subscription duration, Payout profit percentage, number of payment rounds based on subscription duration,Payment intervals or rate = time, last payment = payout percentage amount + fixed amount used for percentage calculation.
+2. Gold category = Subscription amount, Fixed amount profit percentage calculation method, Subscription duration, Payout profit percentage, number of payment rounds based on subscription duration, Payment intervals or rate = time, Last payment = Payout profit percentage + Fixed amount used for percentage calculation.
+3. Diamond category = No Subscription amount, Calculate daily profit percentage method, Custom Subscription duration (6 month default), Custom payout percentage, Custom payment intervals, no last payment = payout percentage amount + fixed amount used for percentage calculation, number of payment rounds based on subscription duration.
+
+set subscription categories(only owner) = Silver, Gold, Diamond.
+
+App owner to be able update, remove or add new subscription categories.
+App owner to be able to update user related functions.

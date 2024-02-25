@@ -1,0 +1,488 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+
+contract Arbbot is ReentrancyGuard {
+
+  using SafeMath for uint;
+
+  address public owner;
+  bool public paused;
+
+  uint public constant MIN_MARGIN = 30; // 0.3% min margin
+
+  AggregatorV3Interface internal priceFeed;
+  
+  struct ArbInfo {
+    address tokenIn;
+    address tokenOut;
+  }
+  
+  struct ArbBatch {
+    bytes32[] batchOpportunities;
+    uint256 batchId;
+  }
+
+  mapping(uint256 => ArbBatch) public pendingBatches;
+
+  event ArbExecuted(
+    uint256 id,
+    address indexed tokenIn, 
+    address indexed tokenOut,
+    uint256 profit
+  );
+
+  event ArbFailed(
+    uint256 id,
+    string reason
+  );
+
+  modifier onlyOwner() {
+    require(msg.sender == owner, "Not owner");
+    _;
+  }
+
+  modifier nonReentrant() {
+    require(!locked, "No reentrancy");
+    locked = true;
+    _;
+    locked = false;
+  }
+
+  constructor(address aggregatorAddress) {
+    owner = msg.sender;
+    priceFeed = AggregatorV3Interface(aggregatorAddress);
+  }
+
+  function startArbitrage(
+    address tokenIn,
+    address tokenOut
+  ) 
+    external 
+    onlyOwner
+    nonReentrant
+  {
+    bytes32 id = keccak256(abi.encodePacked(tokenIn, tokenOut, block.timestamp));
+    
+    ArbInfo memory info = ArbInfo(tokenIn, tokenOut);
+
+    _executeSingleArb(id, info);
+  }
+
+  function _executeSingleArb(bytes32 id, ArbInfo memory info) internal {
+
+    if (!_checkProfitability(info, MIN_MARGIN)) {
+      emit ArbFailed(id, "Not profitable");  
+      return;
+    }
+
+    uint loanAmount = _getLoanAmount(info);
+
+    _takeLoan(loanAmount);
+    
+    _makeTrade(info);
+    
+    _repayLoan(loanAmount);
+    
+    uint profit = _realizeProfit(info);
+    
+    emit ArbExecuted(id, info.tokenIn, info.tokenOut, profit);
+
+  }
+
+  function _checkProfitability(
+    ArbInfo memory info, 
+    uint minMargin
+  ) 
+    internal 
+    view 
+    returns (bool) 
+  {
+    // Estimate output
+    uint outputEstimate = _estimateOutput(info);
+
+    // Estimate total fees
+    uint totalFees = _estimateFees(info, outputEstimate);
+
+    // Check margin
+    uint margin = (outputEstimate - totalFees) * 100 / outputEstimate;
+
+    return (margin >= minMargin);
+  }
+
+  function _estimateOutput(ArbInfo memory info) 
+    internal 
+    view 
+    returns (uint)
+  {
+    uint inputAmount = 1000 ether; // Example input amount
+    uint outputAmount = priceFeed.estimateOutputAmount(info.tokenIn, info.tokenOut, inputAmount);
+    return outputAmount;
+  }
+
+  function _estimateFees(
+    ArbInfo memory info,
+    uint outputEstimate
+  ) 
+    internal
+    view
+    returns (uint)
+  {
+    uint gasPrice = 5 gwei; // Sample gas price
+    uint gas = 200000; // Estimated gas
+
+    uint gasFees = gasPrice * gas;  
+
+    uint slippage = outputEstimate * 30 / 1000; // 3% slippage tolerance
+
+    return gasFees + slippage;
+  }
+
+  function _getLoanAmount(ArbInfo memory info) 
+    internal 
+    view 
+    returns (uint)
+  {
+    uint inputAmount = 1000 ether; // Example
+
+    uint fees = _estimateFees(info, inputAmount);
+
+    return inputAmount + fees + (inputAmount * 10 / 100); // 10% margin
+  }
+
+  function _takeLoan(uint amount) internal {
+    // Take flash loan
+  }
+
+  function _makeTrade(ArbInfo memory info) internal {
+    // Make trade on DEX
+  }
+
+  function _repayLoan(uint amount) internal {
+    // Repay flash loan
+  }
+
+  function _realizeProfit(ArbInfo memory info) internal returns (uint) {
+    // Get input and output amounts
+
+    // Send profit to owner
+
+    return profit; 
+  }
+
+}
+
+
+// Previous contract code...
+
+function createArbBatch(bytes32[] calldata opportunityIds)
+  external
+  onlyOwner
+{
+  uint256 batchId = nextBatchId++;
+  
+  pendingBatches[batchId] = ArbBatch(opportunityIds, batchId);
+}
+
+function cancelArbBatch(uint256 batchId)
+  external
+  onlyOwner
+{
+  delete pendingBatches[batchId];
+}
+
+function executeArbBatch(uint256 batchId)
+  external
+  nonReentrant
+  onlyOwner
+{
+  ArbBatch storage batch = pendingBatches[batchId];
+
+  for (uint i = 0; i < batch.batchOpportunities.length; i++) {
+
+    bytes32 id = batch.batchOpportunities[i];
+
+    _executeSingleArb(id);
+
+  }
+
+  delete pendingBatches[batchId];
+}
+
+function _executeSingleArb(bytes32 id) internal {
+
+  ArbInfo memory info = arbOpportunities[id];
+
+  // Execute arbitrage opportunity
+
+  emit ArbExecuted(id, info.tokenIn, info.tokenOut, profit);
+  
+}
+
+// Utils
+
+function encodeArbOpportunity(
+  address tokenIn,
+  address tokenOut
+) public pure returns (bytes32) {
+  return keccak256(abi.encodePacked(tokenIn, tokenOut));
+}
+
+// External views
+
+function checkArbProfitability(address tokenIn, address tokenOut) 
+  external 
+  view
+  returns (bool) 
+{
+  bytes32 id = encodeArbOpportunity(tokenIn, tokenOut);
+  ArbInfo memory info = arbOpportunities[id];
+
+  return _checkProfitability(info, MIN_MARGIN);
+}
+
+// Other external methods...
+
+
+// Previous code...
+
+// Admin
+
+function addArbOpportunity(
+  address tokenIn,
+  address tokenOut
+) external onlyOwner {
+
+  bytes32 id = encodeArbOpportunity(tokenIn, tokenOut);
+
+  arbOpportunities[id] = ArbInfo(tokenIn, tokenOut);
+
+}
+
+function removeArbOpportunity(
+  address tokenIn,
+  address tokenOut  
+) external onlyOwner {
+
+  bytes32 id = encodeArbOpportunity(tokenIn, tokenOut);
+  
+  delete arbOpportunities[id];
+
+}
+
+// Pausable
+
+function pause() external onlyOwner {
+  paused = true;
+}
+
+function unpause() external onlyOwner {
+  paused = false; 
+}
+
+// Safety
+
+function withdrawTokens(address token, uint amount) external onlyOwner {
+  IERC20(token).transfer(msg.sender, amount);
+}
+
+// Getters
+
+function getArbOpportunity(
+  address tokenIn, 
+  address tokenOut
+) external view returns (ArbInfo memory) {
+
+  bytes32 id = encodeArbOpportunity(tokenIn, tokenOut);
+
+  return arbOpportunities[id];
+}
+
+function getArbBatchOpportunities(
+  uint256 batchId
+) external view returns (bytes32[] memory) {
+  return pendingBatches[batchId].batchOpportunities;
+}
+
+// External interfaces
+
+AggregatorV3Interface public priceFeed;
+IAaveLendingPool public lendingPool;
+
+// Events
+
+// Errors
+
+// Modifiers 
+
+// Private methods
+
+// Internal methods
+
+// Errors
+error ArbNotProfitable();
+error ArbTradeFailed();
+error ArbTransferFailed();
+
+//Events
+event ArbOpportunityAdded(bytes32 id, address tokenIn, address tokenOut);
+
+event ArbOpportunityRemoved(bytes32 id, address tokenIn, address tokenOut);
+
+event ArbBatchCreated(uint256 batchId, bytes32[] opportunityIds);
+
+event ArbBatchCanceled(uint256 batchId);
+
+event ArbBatchExecuted(
+  uint256 batchId, 
+  bytes32[] opportunityIds,
+  uint256 profit
+);
+
+event TokenWithdrawn(address token, uint256 amount, address to);
+
+event ContractPaused(bool paused);
+
+event ContractUnpaused(bool paused);
+
+//Modifiers
+modifier whenNotPaused() {
+  require(!paused, "Contract is paused");
+  _;
+}
+
+//Interfaces
+interface IUniswapV2Router02 {
+  // Uniswap interface  
+}
+
+interface IAaveLendingPool {
+  // Aave interface
+}
+
+//Batch Optimization
+struct ArbBatch {
+  mapping(bytes32 => bool) batchOpportunities;
+  uint256 batchId;
+}
+
+function _executeSingleArb(bytes32 id) internal {
+  ArbBatch storage batch = pendingBatches[batchId];
+
+  if (batch.batchOpportunities[id]) {
+    // Opportunity is part of this batch, execute
+  }
+
+}
+
+//Price Feeds
+AggregatorV3Interface private priceFeed;
+
+function _estimateOutput(ArbInfo memory info) internal view returns (uint) {
+  
+  uint latestPrice = priceFeed.latestAnswer();
+  
+  // Use latest price to estimate output 
+}
+
+//Flash Loan
+function _takeLoan(uint amount) internal {
+
+  address[] memory assets = new address[](1);
+  assets[0] = info.tokenIn;
+
+  uint256[] memory amounts = new uint256[](1);
+  amounts[0] = amount;
+
+  lendingPool.flashLoan(
+    address(this),
+    assets,
+    amounts,
+    0, // No mode
+    this, // Callback
+    0 // Referral code
+  );
+
+}
+
+function executeOperation(
+  address[] calldata assets,
+  uint256[] calldata amounts,
+  uint256[] calldata premiums,
+  address initiator,
+  bytes calldata params
+) external returns (bool) {
+
+  // Callback function executed after receiving flash loan
+
+  return true;
+}
+
+//Lending Pool Interaction
+function depositCollateral(address asset, uint amount) internal {
+   lendingPool.deposit(asset, amount, address(this), 0); 
+}
+
+function withdrawCollateral(address asset, uint amount) internal {
+  lendingPool.withdraw(asset, amount, address(this));
+}
+
+function borrowAsset(address asset, uint amount) internal {
+  lendingPool.borrow(asset, amount, 2, 0, address(this)); 
+}
+
+function repayLoan(address asset, uint amount) internal {
+  lendingPool.repay(asset, amount, 2, address(this));
+}
+
+//Uniswap Integration
+function _makeTrade(ArbInfo memory info) internal {
+
+  address[] memory path; // Define path
+
+  uniswapRouter.swapExactTokensForTokens(
+    amountIn,
+    amountOutMin,
+    path, 
+    address(this), 
+    deadline
+  );
+
+}
+
+function addLiquidity(
+  address tokenA,
+  address tokenB, 
+  uint amountADesired,
+  uint amountBDesired
+) internal {
+
+  uniswapRouter.addLiquidity(
+    tokenA,
+    tokenB,
+    amountADesired,
+    amountBDesired,
+    0, // amountAMin
+    0, // amountBMin
+    address(this),
+    block.timestamp
+  );
+
+}
+
+//Bot Execution
+function executeBatches() external nonReentrant onlyBot {
+
+  uint len = pendingBatchIds.length;
+
+  for (uint i = 0; i < len; i++) {
+    _executeArbBatch(pendingBatchIds[i]); 
+  }
+
+  pendingBatchIds = new bytes32[](0); // Reset
+}
+
+

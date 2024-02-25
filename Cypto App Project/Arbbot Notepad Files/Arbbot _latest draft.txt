@@ -1,0 +1,349 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+import "@aave/protocol/contracts/interfaces/ILendingPool.sol";
+
+
+contract Arbbot is ReentrancyGuard {
+
+  using SafeMath for uint;
+  
+  // Globals
+  address public owner;
+  address public constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+
+  uint public minProfitMargin = 10;  
+  uint public slippageTolerance = 20;
+  uint public stopLossRatio = 30;
+  uint public trailingStopLossRatio = 10;
+
+  // Interfaces
+  AggregatorV3Interface internal priceFeed;
+  IUniswapV2Router02 internal uniswapRouter;
+  IAaveLendingPool internal aaveLendingPool;
+
+  // Structs
+  struct ArbInfo {
+    address tokenIn;
+    address tokenOut; 
+  }
+
+  struct ArbBatch {
+    mapping(bytes32 => bool) batchOpportunities;
+    uint256 batchId;
+  }
+
+  // Mappings
+  mapping(bytes32 => ArbInfo) public arbOpportunities;
+  mapping(uint256 => ArbBatch) public pendingBatches;
+
+  // Events
+  event ArbExecuted(uint id, address tokenIn, address tokenOut, uint profit);
+
+    event TradeExecuted(
+    address tokenIn,
+    address tokenOut,
+    uint input, 
+    uint output
+  );
+
+  // Modifiers
+  modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
+
+  modifier nonReentrant() {
+    require(!locked, "No reentrancy");
+    locked = true; 
+    _;
+    locked = false;
+  }
+
+  // Constructor
+  constructor(address _priceFeed, address _uniswapRouter, address _lendingPool) {
+    owner = msg.sender;
+    priceFeed = AggregatorV3Interface(_priceFeed);
+    uniswapRouter = IUniswapV2Router02(_uniswapRouter);
+    lendingPool = IAaveLendingPool(_lendingPool);
+  }
+
+  // External 
+
+  function startArbitrage(address tokenIn, address tokenOut) external onlyOwner nonReentrant {
+    bytes32 id = keccak256(abi.encodePacked(tokenIn, tokenOut));
+    arbOpportunities[id] = ArbInfo(tokenIn, tokenOut);
+    _executeSingleArb(id);
+  }
+
+  function createArbBatch(bytes32[] calldata opportunityIds) external onlyOwner {
+    uint256 batchId = nextBatchId++;
+    pendingBatches[batchId].batchOpportunities = opportunityIds;
+  }
+
+  // Internal
+
+  function _executeSingleArb(bytes32 id) internal {
+
+    ArbInfo storage info = arbOpportunities[id];
+
+    if (!_checkProfitability(info)) {
+      emit ArbFailed(id, "Not profitable");
+      return; 
+    }
+
+    // Execute trade
+    uint profit = _executeTrade(info);
+    
+    emit ArbExecuted(id, info.tokenIn, info.tokenOut, profit); 
+
+  }
+
+  function _executeTrade(ArbInfo memory info) internal returns (uint) {
+
+    // Take loan
+
+   function _takeLoan(uint amount) internal {
+  // Take flash loan
+   address token = arbInfo.tokenIn; // Get token to borrow
+  
+  aaveLendingPool.flashLoan(
+    address(this),
+    token, 
+    amount,
+    0, // No mode
+    this, // Callback
+    0 // Referral code
+  ) returns (bool) {} catch {
+    revert("Flash loan failed"); 
+    }
+
+     // Validate loan received
+  require(amount == amounts[0], "Invalid loan amount");
+    event LoanTaken(uint amount);
+ 
+}
+
+function executeOperation(
+  address[] calldata assets,
+  uint256[] calldata amounts,
+  uint256[] calldata premiums,
+  address initiator, 
+  bytes calldata params
+) external returns (bool) {
+
+  // Validate callback is expected
+  require(msg.sender == address(aaveLendingPool), "Invalid callback");
+
+  ArbInfo memory info = abi.decode(params, (ArbInfo));
+
+ // Make arbitrage trade
+  _makeTrade(info);
+  
+  
+  // Repay loan
+  mapping(bytes32 => uint) public loanRepaidBlock;
+  _repayLoan(amounts[0]);
+
+  return true;
+ 
+}
+
+    // Make trade
+   
+  function _makeTrade(ArbInfo memory info) internal {
+
+  address[] memory path; // Define path
+
+  uint amountIn = _getInputAmount(info);
+  uint amountOutMin = _getMinimumOutputAmount(amountIn); 
+  
+  // Approve tokens if needed
+  token.approve(address(uniswap), amountIn);
+   
+   try uniswapRouter.swapExactTokensForTokens{gas: TRADE_GAS_LIMIT}(
+    amountIn, 
+    amountOutMin,
+    path, 
+    address(this),
+    deadline
+  ) returns (uint[] memory) 
+  {} catch {
+    revert("Trade failed");
+    }
+
+    // Validate trade output
+  require(output >= amountOutMin, "Insufficient output");
+
+    emit TradeExecuted(tokenIn, tokenOut, amountIn, output);
+  
+  uniswapRouter.swapExactTokensForTokens(
+    amountIn, 
+    amountOutMin,
+    path,
+    address(this),
+    block.timestamp
+  )  returns (uint[] memory) 
+  {} catch {
+    revert("Trade failed");
+    }
+}
+
+  mapping(bytes32 => uint) public loanRepaidBlock;
+
+    // Repay loan
+
+   function _repayLoan(uint amount) internal {
+
+  // Repay flash loan
+   address token = arbInfo.tokenIn;
+
+ // Calculate repayment amount
+  uint repayAmount = amount + premium;
+
+ // Approve tokens if needed
+  token.approve(address(lendingPool), repayAmount);
+
+  uint fee = (amount * FLASH_LOAN_FEE) / 10000; // 0.09% 
+
+  transferToken(token, aaveLendingPool, amount + fee);
+
+ // Repay flash loan 
+  lendingPool.repay(amount, 2, address(this)); 
+
+  //Confirm repayment transaction
+   loanRepaidBlock[info.id] = block.number;
+
+    return _realizeProfit(info);
+
+  }
+
+  function _realizeProfit(ArbInfo memory info) internal returns (uint) {
+    
+    // Get output amount
+	
+    // Swap to USDT
+    address[] memory path; 
+    path[0] = info.tokenOut;
+    path[1] = USDT;
+
+    uint[] memory amounts = uniswapRouter.swapExactTokensForTokens(
+      outputAmount, 
+      0,
+      path,
+      address(this),
+      block.timestamp  
+    );
+
+    // Send USDT profit to owner
+    transferToken(USDT, owner, amounts[1]);
+
+    return amounts[1];
+
+  }
+
+  // Internal views
+
+  // Check profitability
+  function _checkProfitability(ArbInfo memory info) internal view returns (bool) {
+   uint outputEstimate = _estimateOutput(info);
+
+  uint fees = _estimateFees(info, outputEstimate);
+
+  uint margin = (outputEstimate - fees) * 100 / outputEstimate;
+
+  return (margin >= minProfitMargin); 
+  }
+  
+  function _estimateOutput(ArbInfo memory info) internal view returns (uint) {
+  
+  uint inputAmount = _getInputAmount(info);
+  
+  return priceFeed.estimateOutput(inputAmount); 
+
+}
+
+  function _estimateFees(ArbInfo memory info, uint output) internal view returns (uint) {
+
+  uint gas = 21000 * _getGasPrice();
+  
+  uint slippage = output * slippageTolerance / 1000;
+
+  return gas + slippage;
+
+} 
+
+  function _getInputAmount(ArbInfo memory info) internal view returns (uint) {
+
+  uint outputEstimate = _estimateOutput(info);
+
+  uint fees = _estimateFees(info, outputEstimate); 
+
+  uint tradeAmount = (outputEstimate - fees) / (1 + minProfitMargin / 100);
+
+  return tradeAmount; 
+
+}
+
+  function _calculateLoanAmount(ArbInfo memory info) internal view returns (uint) {
+
+  uint inputAmount = _getInputAmount(info);
+
+  uint fees = _estimateFees(info, inputAmount);
+
+  uint margin = calculateMargin(inputAmount); // Get required margin
+  
+  return inputAmount + fees + margin;
+
+}
+
+function calculateMargin(uint inputAmount, address token) public view returns (uint) {
+
+  uint inputValueInUSD = getValueInUSD(inputAmount, token);
+
+  if (inputValueInUSD < 1000) {
+    return inputAmount / 10; // 10% margin for trades < $1000 value
+
+  } else if (inputValueInUSD < 5000) {  
+    return inputAmount / 20; // 5% margin for trades $1000-$5000
+
+  } else if (inputValueInUSD < 10000) {
+    return inputAmount / 30; // 3.33% margin trades $5000-$10000
+  
+  } else {
+    return inputAmount / 100; // 1% margin for trades > $10,000
+  }
+
+}
+
+function getValueInUSD(uint inputAmount, address token) internal view returns (uint) {
+  // Get price of token in USD
+  uint tokenPriceUSD = priceFeed.getPrice(token); 
+  return inputAmount * tokenPriceUSD; // Value in USD
+}
+ 
+ 
+  // Admin
+
+  function withdrawTokens(address token, uint amount) external onlyOwner {
+    transferToken(token, msg.sender, amount);
+  }
+
+  function setSlippageTolerance(uint tolerance) external onlyOwner {
+  slippageTolerance = tolerance;
+}
+
+
+  // Safety
+
+  function transferToken(address token, address to, uint amount) internal {
+    IERC20(token).transfer(to, amount);
+  }
+
+  
+
+}

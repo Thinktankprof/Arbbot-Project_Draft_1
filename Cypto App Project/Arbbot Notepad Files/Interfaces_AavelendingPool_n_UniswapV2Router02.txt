@@ -1,0 +1,937 @@
+pragma solidity ^0.8.0;
+
+interface IUniswapV2Router02 {
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+}
+
+interface IUniswapV2Router02Compatible {
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] memory path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+}
+
+contract MyContract {
+    IUniswapV2Router02Compatible public uniswapRouter;
+
+    constructor(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D _uniswapRouter) {
+        uniswapRouter = IUniswapV2Router02Compatible(_uniswapRouter);
+    }
+}
+
+
+pragma solidity ^0.8.0;
+
+interface IAaveLendingPool {
+  function flashLoan(
+    address receiver, 
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint16 referralCode    
+  ) external;
+}
+
+interface IAaveLendingPoolCompatible {
+  function flashLoan(
+    address receiver, 
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint16 referralCode    
+  ) external;
+}
+
+contract MyContract {
+    IAaveLendingPoolCompatible public lendingPool;
+
+    constructor(address _lendingPool) {
+        lendingPool = IAaveLendingPoolCompatible(_lendingPool);
+    }
+}
+
+
+
+
+pragma solidity ^0.8.0;
+
+interface ILendingPool {
+    function deposit(
+        address _reserve,
+        uint256 _amount,
+        address _referralCode,
+        uint16 _transferDirection
+    ) external payable;
+
+    function withdraw(
+        address _reserve,
+        uint256 _amount,
+        address _destination,
+        uint16 _transferDirection
+    ) external;
+
+    function borrow(
+        address _reserve,
+        uint256 _amount,
+        uint256 _interestRateMode,
+        uint16 _referralCode
+    ) external;
+
+    function repay(
+        address _reserve,
+        uint256 _amount,
+        address _onBehalfOf
+    ) external payable;
+
+    function swapBorrowRateMode(address _reserve) external;
+
+    function rebalanceStableBorrowRate(address _reserve, address _user) external;
+
+    function setUserUseReserveAsCollateral(address _reserve, bool _useAsCollateral) external;
+
+    function liquidationCall(
+        address _collateral,
+        address _reserve,
+        address _user,
+        uint256 _purchaseAmount,
+        bool _receiveAToken
+    ) external payable;
+
+    function flashLoan(
+        address _receiverAddress,
+        address _reserve,
+        uint256 _amount,
+        bytes calldata _params
+    ) external;
+
+    function getReserveData(address _reserve)
+        external
+        view
+        returns (
+            uint256 totalLiquidity,
+            uint256 availableLiquidity,
+            uint256 totalBorrowsStable,
+            uint256 totalBorrowsVariable,
+            uint256 liquidityRate,
+            uint256 variableBorrowRate,
+            uint256 stableBorrowRate,
+            uint256 averageStableBorrowRate,
+            uint256 utilizationRate,
+            uint256 liquidityIndex,
+            uint256 variableBorrowIndex,
+            address aTokenAddress,
+            uint40 lastUpdateTimestamp
+        );
+
+    function getUserAccountData(address _user)
+        external
+        view
+        returns (
+            uint256 totalLiquidityETH,
+            uint256 totalCollateralETH,
+            uint256 totalBorrowsETH,
+            uint256 totalFeesETH,
+            uint256 availableBorrowsETH,
+            uint256 currentLiquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor
+        );
+}
+
+interface ILendingPoolCompatible {
+    function deposit(
+        address _reserve,
+        uint256 _amount,
+        address _referralCode,
+        uint16 _transferDirection
+    ) external payable;
+
+    function withdraw(
+        address _reserve,
+        uint256 _amount,
+        address _destination,
+        uint16 _transferDirection
+    ) external;
+
+    function borrow(
+        address _reserve,
+        uint256 _amount,
+        uint256 _interestRateMode,
+        uint16 _referralCode
+    ) external;
+
+    function repay(
+        address _reserve,
+        uint256 _amount,
+        address _onBehalfOf
+    ) external payable;
+
+    function swapBorrowRateMode(address _reserve) external;
+
+    function rebalanceStableBorrowRate(address _reserve, address _user) external;
+
+    function setUserUseReserveAsCollateral(address _reserve, bool _useAsCollateral) external;
+
+    function liquidationCall(
+        address _collateral,
+        address _reserve,
+        address _user,
+        uint256 _purchaseAmount,
+        bool _receiveAToken
+    ) external payable;
+
+    function flashLoan(
+        address _receiverAddress,
+        address _reserve,
+        uint256 _amount,
+        bytes calldata _params
+    ) external;
+
+    function getReserveData(address _reserve)
+        external
+        view
+        returns (
+            uint256 totalLiquidity,
+            uint256 availableLiquidity,
+            uint256 totalBorrowsStable,
+            uint256 totalBorrowsVariable,
+            uint256 liquidityRate,
+            uint256 variableBorrowRate,
+            uint256 stableBorrowRate,
+            uint256 averageStableBorrowRate,
+            uint256 utilizationRate,
+            uint256 liquidityIndex,
+            uint256 variableBorrowIndex,
+            address aTokenAddress,
+            uint40 lastUpdateTimestamp
+        );
+
+    function getUserAccountData(address _user)
+        external
+        view
+        returns (
+            uint256 totalLiquidityETH,
+            uint256 totalCollateralETH,
+            uint256 totalBorrowsETH,
+            uint256 totalFeesETH,
+            uint256 availableBorrowsETH,
+            uint256 currentLiquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor
+        );
+}
+
+contract MyContract {
+    ILendingPoolCompatible public lendingPool;
+
+    constructor(0x987115C38Fd9Fd2aA2c6F1718451D167c13a3186 _lendingPool) {
+        lendingPool = ILendingPoolCompatible(_lendingPool);
+    }
+}
+
+
+===============================================================================
+
+Aave Lending Protocol etherscan contract address link: 
+https://etherscan.io/address/0x987115c38fd9fd2aa2c6f1718451d167c13a3186#code
+
+etherscan contract address: 0x987115C38Fd9Fd2aA2c6F1718451D167c13a3186
+
+
+UniswapV2Router02 etherscan contract address link: 
+https://etherscan.io/address/0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D#code
+
+etherscan contract address: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+
+
+AggregatorV3Interface internal priceFeed;
+
+address public _priceFeed = 0x169E633A2D1E6c10dD91238Ba11c4A708dfEF37C;
+
+interface AggregatorInterface {
+
+
+ function latestAnswer() external view returns (int256);
+  function latestTimestamp() external view returns (uint256);
+  function latestRound() external view returns (uint256);
+  function getAnswer(uint256 roundId) external view returns (int256);
+  function getTimestamp(uint256 roundId) external view returns (uint256);
+
+  event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);
+  event NewRound(uint256 indexed roundId, address indexed startedBy, uint256 startedAt);
+
+
+
+	function latestAnswer()
+    public
+    view
+    virtual
+    override
+    returns (int256 answer)
+  {
+    return currentPhase.aggregator.latestAnswer();
+  }
+
+	 function latestTimestamp()
+    public
+    view
+    virtual
+    override
+    returns (uint256 updatedAt)
+  {
+    return currentPhase.aggregator.latestTimestamp();
+  }
+
+
+	function latestRound()
+    public
+    view
+    virtual
+    override
+    returns (uint256 roundId)
+  {
+    Phase memory phase = currentPhase; // cache storage reads
+    return addPhase(phase.id, uint64(phase.aggregator.latestRound()));
+  }
+
+
+	function getAnswer(uint256 _roundId)
+    public
+    view
+    virtual
+    override
+    returns (int256 answer)
+  {
+    if (_roundId > MAX_ID) return 0;
+
+    (uint16 phaseId, uint64 aggregatorRoundId) = parseIds(_roundId);
+    AggregatorV2V3Interface aggregator = phaseAggregators[phaseId];
+    if (address(aggregator) == address(0)) return 0;
+
+    return aggregator.getAnswer(aggregatorRoundId);
+  }
+
+	function getTimestamp(uint256 _roundId)
+    public
+    view
+    virtual
+    override
+    returns (uint256 updatedAt)
+  {
+    if (_roundId > MAX_ID) return 0;
+
+    (uint16 phaseId, uint64 aggregatorRoundId) = parseIds(_roundId);
+    AggregatorV2V3Interface aggregator = phaseAggregators[phaseId];
+    if (address(aggregator) == address(0)) return 0;
+
+    return aggregator.getTimestamp(aggregatorRoundId);
+  }
+
+
+}
+
+	
+============================================================================
+
+interface Aggregatorv3 other functions style
+
+	function latestAnswer()
+    public
+    view
+    override
+    checkAccess()
+    returns (int256)
+  {
+    return super.latestAnswer();
+  }
+
+	 function latestTimestamp()
+    public
+    view
+    override
+    checkAccess()
+    returns (uint256)
+  {
+    return super.latestTimestamp();
+  }
+
+
+	function getAnswer(uint256 _roundId)
+    public
+    view
+    override
+    checkAccess()
+    returns (int256)
+  {
+    return super.getAnswer(_roundId);
+  }
+
+	function getTimestamp(uint256 _roundId)
+    public
+    view
+    override
+    checkAccess()
+    returns (uint256)
+  {
+    return super.getTimestamp(_roundId);
+  }
+
+	 function latestRound()
+    public
+    view
+    override
+    checkAccess()
+    returns (uint256)
+  {
+    return super.latestRound();
+  }
+
+contract MyContract {
+    	AggregatorV3Interface internal priceFeed;
+
+	constructor(address _priceFeed){
+ 	priceFeed = AggregatorV3Interface(_priceFeed);
+	}
+}
+
+
+===========================================================================
+
+pragma solidity ^0.8.0;
+
+interface IGasEstimator {
+    function estimateGas(address to, uint256 value, bytes calldata data) external view returns (uint256);
+}
+
+contract MyContract {
+    IGasEstimator public gasEstimator;
+
+    constructor(address gasEstimatorAddress) {
+        gasEstimator = IGasEstimator(gasEstimatorAddress);
+    }
+
+    function myFunction(address to, address from, uint256 amount) public view returns (uint256) {
+        // Use the GasEstimator contract
+        bytes memory data = abi.encodeWithSignature("estimateGas(address,uint256,bytes)", to, amount, "");
+        uint256 gasAmount = gasEstimator.estimateGas(address(this), 0, data);
+        return gasAmount;
+    }
+}
+
+or
+
+pragma solidity ^0.8.0;
+
+import "https://github.com/bcnmy/scw-contracts/blob/main/contracts/smart-account/utils/GasEstimator.sol";
+
+contract MyContract {
+  function myFunction() public {
+    // Use the GasEstimator contract
+    GasEstimator gasEstimator = new GasEstimator();
+    uint gasAmount = gasEstimator.estimateGas({to: to, from: from, value: amount});
+  }
+}
+
+=============================================================================
+or openzepplin
+
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/gas/GasEstimator.sol";
+
+contract MyContract {
+  function myFunction() public {
+    // Use the GasEstimator contract
+    GasEstimator gasEstimator = new GasEstimator();
+    uint gasAmount = gasEstimator.estimateGas({to: to, from: from, value: amount});
+  }
+}
+
+==============================================================================
+
+ error:"", code:"", what has to be declared or defined, or done in the code to have it work and get compiled?
+
+pragma solidity ^0.8.0;
+
+interface IUniswapV2Router02 {
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+}
+
+interface IUniswapV2Router02Compatible {
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] memory path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+}
+
+contract MyContract {
+    IUniswapV2Router02Compatible public uniswapRouter;
+
+    constructor(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D _uniswapRouter) {
+        uniswapRouter = IUniswapV2Router02Compatible(_uniswapRouter);
+    }
+}
+
+
+pragma solidity ^0.8.0;
+
+interface IAaveLendingPool {
+  function flashLoan(
+    address receiver, 
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint16 referralCode    
+  ) external;
+}
+
+interface IAaveLendingPoolCompatible {
+  function flashLoan(
+    address receiver, 
+    address[] calldata assets,
+    uint256[] calldata amounts,
+    uint256[] calldata modes,
+    address onBehalfOf,
+    bytes calldata params,
+    uint16 referralCode    
+  ) external;
+}
+
+contract MyContract {
+    IAaveLendingPoolCompatible public lendingPool;
+
+    constructor(address _lendingPool) {
+        lendingPool = IAaveLendingPoolCompatible(_lendingPool);
+    }
+}
+
+
+
+
+pragma solidity ^0.8.0;
+
+interface ILendingPool {
+    function deposit(
+        address _reserve,
+        uint256 _amount,
+        address _referralCode,
+        uint16 _transferDirection
+    ) external payable;
+
+    function withdraw(
+        address _reserve,
+        uint256 _amount,
+        address _destination,
+        uint16 _transferDirection
+    ) external;
+
+    function borrow(
+        address _reserve,
+        uint256 _amount,
+        uint256 _interestRateMode,
+        uint16 _referralCode
+    ) external;
+
+    function repay(
+        address _reserve,
+        uint256 _amount,
+        address _onBehalfOf
+    ) external payable;
+
+    function swapBorrowRateMode(address _reserve) external;
+
+    function rebalanceStableBorrowRate(address _reserve, address _user) external;
+
+    function setUserUseReserveAsCollateral(address _reserve, bool _useAsCollateral) external;
+
+    function liquidationCall(
+        address _collateral,
+        address _reserve,
+        address _user,
+        uint256 _purchaseAmount,
+        bool _receiveAToken
+    ) external payable;
+
+    function flashLoan(
+        address _receiverAddress,
+        address _reserve,
+        uint256 _amount,
+        bytes calldata _params
+    ) external;
+
+    function getReserveData(address _reserve)
+        external
+        view
+        returns (
+            uint256 totalLiquidity,
+            uint256 availableLiquidity,
+            uint256 totalBorrowsStable,
+            uint256 totalBorrowsVariable,
+            uint256 liquidityRate,
+            uint256 variableBorrowRate,
+            uint256 stableBorrowRate,
+            uint256 averageStableBorrowRate,
+            uint256 utilizationRate,
+            uint256 liquidityIndex,
+            uint256 variableBorrowIndex,
+            address aTokenAddress,
+            uint40 lastUpdateTimestamp
+        );
+
+    function getUserAccountData(address _user)
+        external
+        view
+        returns (
+            uint256 totalLiquidityETH,
+            uint256 totalCollateralETH,
+            uint256 totalBorrowsETH,
+            uint256 totalFeesETH,
+            uint256 availableBorrowsETH,
+            uint256 currentLiquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor
+        );
+}
+
+interface ILendingPoolCompatible {
+    function deposit(
+        address _reserve,
+        uint256 _amount,
+        address _referralCode,
+        uint16 _transferDirection
+    ) external payable;
+
+    function withdraw(
+        address _reserve,
+        uint256 _amount,
+        address _destination,
+        uint16 _transferDirection
+    ) external;
+
+    function borrow(
+        address _reserve,
+        uint256 _amount,
+        uint256 _interestRateMode,
+        uint16 _referralCode
+    ) external;
+
+    function repay(
+        address _reserve,
+        uint256 _amount,
+        address _onBehalfOf
+    ) external payable;
+
+    function swapBorrowRateMode(address _reserve) external;
+
+    function rebalanceStableBorrowRate(address _reserve, address _user) external;
+
+    function setUserUseReserveAsCollateral(address _reserve, bool _useAsCollateral) external;
+
+    function liquidationCall(
+        address _collateral,
+        address _reserve,
+        address _user,
+        uint256 _purchaseAmount,
+        bool _receiveAToken
+    ) external payable;
+
+    function flashLoan(
+        address _receiverAddress,
+        address _reserve,
+        uint256 _amount,
+        bytes calldata _params
+    ) external;
+
+    function getReserveData(address _reserve)
+        external
+        view
+        returns (
+            uint256 totalLiquidity,
+            uint256 availableLiquidity,
+            uint256 totalBorrowsStable,
+            uint256 totalBorrowsVariable,
+            uint256 liquidityRate,
+            uint256 variableBorrowRate,
+            uint256 stableBorrowRate,
+            uint256 averageStableBorrowRate,
+            uint256 utilizationRate,
+            uint256 liquidityIndex,
+            uint256 variableBorrowIndex,
+            address aTokenAddress,
+            uint40 lastUpdateTimestamp
+        );
+
+    function getUserAccountData(address _user)
+        external
+        view
+        returns (
+            uint256 totalLiquidityETH,
+            uint256 totalCollateralETH,
+            uint256 totalBorrowsETH,
+            uint256 totalFeesETH,
+            uint256 availableBorrowsETH,
+            uint256 currentLiquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor
+        );
+}
+
+contract MyContract {
+    ILendingPoolCompatible public lendingPool;
+
+    constructor(0x987115C38Fd9Fd2aA2c6F1718451D167c13a3186 _lendingPool) {
+        lendingPool = ILendingPoolCompatible(_lendingPool);
+    }
+}
+
+
+===============================================================================
+
+Aave Lending Protocol etherscan contract address link: 
+https://etherscan.io/address/0x987115c38fd9fd2aa2c6f1718451d167c13a3186#code
+
+etherscan contract address: 0x987115C38Fd9Fd2aA2c6F1718451D167c13a3186
+
+
+UniswapV2Router02 etherscan contract address link: 
+https://etherscan.io/address/0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D#code
+
+etherscan contract address: 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+
+
+AggregatorV3Interface internal priceFeed;
+
+address public _priceFeed = 0x169E633A2D1E6c10dD91238Ba11c4A708dfEF37C;
+
+interface AggregatorInterface {
+
+
+ function latestAnswer() external view returns (int256);
+  function latestTimestamp() external view returns (uint256);
+  function latestRound() external view returns (uint256);
+  function getAnswer(uint256 roundId) external view returns (int256);
+  function getTimestamp(uint256 roundId) external view returns (uint256);
+
+  event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);
+  event NewRound(uint256 indexed roundId, address indexed startedBy, uint256 startedAt);
+
+
+
+	function latestAnswer()
+    public
+    view
+    virtual
+    override
+    returns (int256 answer)
+  {
+    return currentPhase.aggregator.latestAnswer();
+  }
+
+	 function latestTimestamp()
+    public
+    view
+    virtual
+    override
+    returns (uint256 updatedAt)
+  {
+    return currentPhase.aggregator.latestTimestamp();
+  }
+
+
+	function latestRound()
+    public
+    view
+    virtual
+    override
+    returns (uint256 roundId)
+  {
+    Phase memory phase = currentPhase; // cache storage reads
+    return addPhase(phase.id, uint64(phase.aggregator.latestRound()));
+  }
+
+
+	function getAnswer(uint256 _roundId)
+    public
+    view
+    virtual
+    override
+    returns (int256 answer)
+  {
+    if (_roundId > MAX_ID) return 0;
+
+    (uint16 phaseId, uint64 aggregatorRoundId) = parseIds(_roundId);
+    AggregatorV2V3Interface aggregator = phaseAggregators[phaseId];
+    if (address(aggregator) == address(0)) return 0;
+
+    return aggregator.getAnswer(aggregatorRoundId);
+  }
+
+	function getTimestamp(uint256 _roundId)
+    public
+    view
+    virtual
+    override
+    returns (uint256 updatedAt)
+  {
+    if (_roundId > MAX_ID) return 0;
+
+    (uint16 phaseId, uint64 aggregatorRoundId) = parseIds(_roundId);
+    AggregatorV2V3Interface aggregator = phaseAggregators[phaseId];
+    if (address(aggregator) == address(0)) return 0;
+
+    return aggregator.getTimestamp(aggregatorRoundId);
+  }
+
+
+}
+
+	
+============================================================================
+
+interface Aggregatorv3 other functions style
+
+	function latestAnswer()
+    public
+    view
+    override
+    checkAccess()
+    returns (int256)
+  {
+    return super.latestAnswer();
+  }
+
+	 function latestTimestamp()
+    public
+    view
+    override
+    checkAccess()
+    returns (uint256)
+  {
+    return super.latestTimestamp();
+  }
+
+
+	function getAnswer(uint256 _roundId)
+    public
+    view
+    override
+    checkAccess()
+    returns (int256)
+  {
+    return super.getAnswer(_roundId);
+  }
+
+	function getTimestamp(uint256 _roundId)
+    public
+    view
+    override
+    checkAccess()
+    returns (uint256)
+  {
+    return super.getTimestamp(_roundId);
+  }
+
+	 function latestRound()
+    public
+    view
+    override
+    checkAccess()
+    returns (uint256)
+  {
+    return super.latestRound();
+  }
+
+contract MyContract {
+    	AggregatorV3Interface internal priceFeed;
+
+	constructor(address _priceFeed){
+ 	priceFeed = AggregatorV3Interface(_priceFeed);
+	}
+}
+
+
+===========================================================================
+
+pragma solidity ^0.8.0;
+
+interface IGasEstimator {
+    function estimateGas(address to, uint256 value, bytes calldata data) external view returns (uint256);
+}
+
+contract MyContract {
+    IGasEstimator public gasEstimator;
+
+    constructor(address gasEstimatorAddress) {
+        gasEstimator = IGasEstimator(gasEstimatorAddress);
+    }
+
+    function myFunction(address to, address from, uint256 amount) public view returns (uint256) {
+        // Use the GasEstimator contract
+        bytes memory data = abi.encodeWithSignature("estimateGas(address,uint256,bytes)", to, amount, "");
+        uint256 gasAmount = gasEstimator.estimateGas(address(this), 0, data);
+        return gasAmount;
+    }
+}
+
+or
+
+pragma solidity ^0.8.0;
+
+import "https://github.com/bcnmy/scw-contracts/blob/main/contracts/smart-account/utils/GasEstimator.sol";
+
+contract MyContract {
+  function myFunction() public {
+    // Use the GasEstimator contract
+    GasEstimator gasEstimator = new GasEstimator();
+    uint gasAmount = gasEstimator.estimateGas({to: to, from: from, value: amount});
+  }
+}
+
+=============================================================================
+or openzepplin
+
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/gas/GasEstimator.sol";
+
+contract MyContract {
+  function myFunction() public {
+    // Use the GasEstimator contract
+    GasEstimator gasEstimator = new GasEstimator();
+    uint gasAmount = gasEstimator.estimateGas({to: to, from: from, value: amount});
+  }
+}
+
+==============================================================================
+
+ error:"", code:"", what has to be declared or defined, or done in the code to have it work and get compiled? Show example.
+
+please analyse if everything is fine, arguments, naming covention, workabilty and optimization. ok?
+
+
+
+
